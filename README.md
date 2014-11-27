@@ -12,8 +12,10 @@ E.	Reference
 F.	Version history
 
 A. Functions
-1.	'DecompFlux.m' is the main function file. All other functions are invoked by it. Given the stoichiometrix matrix, a flux distribution can be decomposed into a set of EFM by this function. Parameters have been default if not supplied by user.
-If you simply want an arbitrary decomposition, you can set CT=2 and do not give any objective function. If you want EFMs with possibly larger contributions to a particular reaction, you can try both CT=1 and 2. In general, CT=1 should give better results but you may have to adjust the parameter (see section ‘Technical problems’ point 3).
+1.	'DecompFlux.m' is the main function file. All other functions are invoked by it. It only requires a structure (COBRA model) with stoichiometric matrix and reversibility vector as fields. 
+A flux distribution can be decomposed into a set of EFM by this function. Parameters have been default if not supplied by user.
+If you simply want an arbitrary decomposition, you can set CT=2 and do not give any objective function. 
+If you want EFMs with possibly larger contributions to a particular reaction, you can try both CT=1 and 2. In general, CT=1 gives better results but you may have to adjust the parameter (see section ‘Technical problems’ point 3).
 2.	‘isEFM.m’ is a function to check whether a set of flux modes is EFMs or not given the stoichiometric matrix by solving LP. It invokes ‘isDC.m’. For flux distributions which can cause numerical difficulties, say, when involving non-integer, and especially when the magnitude differs largely between fluxes of different reactions (e.g. the largest flux is 5000 and the smallest flux is 0.1), the practical solution of the MILP by a solver may be prone to error because of tolerance problems. Checking by LP is thus a good way to make sure all the modes are elementary.
 3.	‘SreToSir.m’ is a simple function to transform a stoichiometrix matrix with reversible reactions into one without, by splitting each reversible reaction into two irreversible reactions.
 **'DecompFlux.m' requires an MILP solver. The current version supports Cplex11 or above or solvers embedded in the COBRA toolbox if the COBRA toolbox has been installed. ‘isEFM.m’ requires an LP solver. The current version supports Cplex11 or above or solvers embedded in the COBRA toolbox or the ‘linprog.m’ native in Matlab. Please see the section ‘Optimization solver’ below for further information.
