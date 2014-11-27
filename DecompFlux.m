@@ -84,8 +84,15 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
 %       will be recorded in this N by 2 matrix 'depth'.
 
 %% Pre-process
-%Add the path for subroutines
-addpath([pwd filesep 'DecompFluxSub']);
+%Try to add the path for subroutines if not added
+if  ~exist('decompfluxCT1','file')
+    DFpath = which('DecompFlux');
+    strpos = strfind(DFpath, 'DecompFlux.m');
+    id = 'MATLAB:dispatcher:pathWarning';
+    warning('off',id) %turn off the warning in case that the path is not found
+    addpath([DFpath(1:strpos-1) 'DecompFluxSub'])
+    warning('on',id) %turn on the warning back
+end
 %Check inputs
 if ~exist('options','var'), options = struct(); end
 FD = struct();
@@ -192,10 +199,10 @@ FM2 = FM(FD.ir2re,:);
 FM2(FD0.rev ~= 0,:) = FM2(FD0.rev ~= 0,:) - FM(~FD.ir2re,:);
 FM = FM2;
 if ~isempty(Corr)
-    for j = 1:size(Corr,1)
-        v = Corr{j,2}(FD.ir2re,:);
-        v(FD0.rev ~= 0,:) = v(FD0.rev ~= 0,:) - Corr{j,2}(~FD.ir2re,:);
-        Corr{j,2} = v;
+    for j = 1:size(Corr,2)
+        v = Corr{2,j}(FD.ir2re,:);
+        v(FD0.rev ~= 0,:) = v(FD0.rev ~= 0,:) - Corr{2,j}(~FD.ir2re,:);
+        Corr{2,j} = v;
     end
 end
 disp({'No. of EFM:' size(EFM,2);'No. of corrected flux modes:' size(Corr,2)});
