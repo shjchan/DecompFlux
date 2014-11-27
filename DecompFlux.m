@@ -77,7 +77,7 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
 %Reduce: the sum of fluxes (of the flux distribution to be decomposed) that
 %       is subtracted after finding the n-th EFM
 %Corr:  2 by N cell, if corrections of flux modes have taken place due to 
-%       high level of flux imbalance, the no. of flux modes and the flux
+%       high level of flux imbalance, the indices of flux modes and the flux
 %       modes before correction will be recorded in Corr.
 %depth: When an EFM is found, the depth of the stack, ie., 'current node'
 %       number and the depth of the stack after removing useless flux modes, 
@@ -193,11 +193,9 @@ FM2(FD0.rev ~= 0,:) = FM2(FD0.rev ~= 0,:) - FM(~FD.ir2re,:);
 FM = FM2;
 if ~isempty(Corr)
     for j = 1:size(Corr,1)
-        for k = 1:size(Corr,2)
-            v = Corr{j,k}(FD.ir2re);
-            v(FD0.rev ~= 0) = v(FD0.rev ~= 0) - Corr{j,k}(~FD.ir2re);
-            Corr{j,k} = v;
-        end
+        v = Corr{j,2}(FD.ir2re,:);
+        v(FD0.rev ~= 0,:) = v(FD0.rev ~= 0,:) - Corr{j,2}(~FD.ir2re,:);
+        Corr{j,2} = v;
     end
 end
 disp({'No. of EFM:' size(EFM,2);'No. of corrected flux modes:' size(Corr,2)});
