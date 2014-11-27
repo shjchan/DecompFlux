@@ -1,4 +1,4 @@
-function solution = solveCobraMILPedit(MILPproblem,varargin)
+function solution = solveCobraMILP(MILPproblem,varargin)
 %solveCobraMILP Solve constraint-based MILP problems
 %
 % solution = solveCobraMILP(MILPproblem,parameters)
@@ -30,7 +30,7 @@ function solution = solveCobraMILPedit(MILPproblem,varargin)
 %               = 1    Warnings and Errors
 %               = 2    Summary information 
 %               = 3    More detailed information
-%  saveInput    Saves LPproblem to filename specified in field. 
+%  saveInput    Saves MILPproblem to filename specified in field. 
 %               i.e. parameters.saveInput = 'LPproblem.mat';
 %               Setting parameters = 'default' uses default setting set in
 %               getCobraSolverParameters.
@@ -59,17 +59,10 @@ function solution = solveCobraMILPedit(MILPproblem,varargin)
 %
 % Markus Herrgard 1/23/07
 % Tim Harrington  05/18/12 Added support for the Gurobi 5.0 solver
-% Siu Hung Joshua Chan 20/03/14 edited the part for Gurobi 5.0
-%
-% This script is part of the openCOBRA Project and is distributed under 
-% the GNU GPLv3 or later.  However, this software is designed for 
-% scientific research and as such may contain algorithms that are 
-% associated with patents in the U.S. and abroad.  If the user so chooses 
-% to use the software provided by the openCOBRA project for commercial 
-% endeavors then it is solely the user’s responsibility to license 
-% any patents that may exist and respond in full to any legal actions 
-% taken by the patent holder.
-% For details, please visit http://opencobra.sourceforge.net/
+% Siu Hung Joshua Chan 05/10/14 Modified script for Gurobi 5.0 solver and
+%                               added support for directly calling cplexmilp.p
+%                               added MILP bound for Gurobi 5.0 and
+%                               Cplex_direct2
 
 %% Process options
 
@@ -139,6 +132,12 @@ xCont = [];
 if any(~(vartype == 'C' | vartype == 'B' | vartype == 'I'))
     display ('vartype not C or B or I:  Assuming C');
     vartype(vartype ~= 'C' & vartype ~= 'I'& vartype ~= 'B') = 'C';
+end
+% Added by Joshua Chan. If vartype is a single character, apply it for all
+% variables. Otherwise, in the final solution output, the fields 'cont' and 
+% 'int' will be mismatched.
+if numel(vartype)==1
+    vartype=char(vartype*ones(1,numel(c)));
 end
 
 t_start = clock;
@@ -249,6 +248,12 @@ switch solver
         if solverParams.printLevel == 0 
            params.OutputFlag = 0;
            params.DisplayInterval = 1;
+        elseif solverParams.printLevel == 1
+           params.OutputFlag = 0;
+           params.DisplayInterval = 2;
+        elseif solverParams.printLevel == 2
+           params.OutputFlag = 0;
+           params.DisplayInterval = 3;
         else
            params.OutputFlag = 1;
            params.DisplayInterval = 5;
@@ -293,9 +298,10 @@ switch solver
                     ' = parameters.' gurobi5param{Ngurobi5param} ';']); %added by Joshua manually
             end %added by Joshua manually
         end %added by Joshua manually
-        if isfield(MILPproblem,'x0') && ~isempty(MILPproblem.x0)    %added by Joshua manually
-            MILPproblem.start=MILPproblem.x0;                       %added by Joshua manually
-        end                                                         %added by Joshua manually
+        
+        if ~isempty(MILPproblem.x0)                                 %added by Joshua 
+            MILPproblem.start=MILPproblem.x0;                       %added by Joshua 
+        end                                                         %added by Joshua 
         
         if (isempty(csense))
             clear csense
@@ -319,21 +325,22 @@ switch solver
         resultgurobi = gurobi(MILPproblem,params);
         
         stat = resultgurobi.status;                 
-        if isfield(resultgurobi,'x')                %added by Joshua manually
+        if isfield(resultgurobi,'x')                %added by Joshua 
         % because if no feasible solution is found, 'x' will not be a field
-            x=resultgurobi.x;                       %added by Joshua manually
-        else                                        %added by Joshua manually
-            x=[];                                   %added by Joshua manually
-        end                                         %added by Joshua manually
-        if isfield(resultgurobi,'objval')           %added by Joshua manually
+            x=resultgurobi.x;                       %added by Joshua 
+            xB=resultgurobi.objbound;               %added by Joshua
+        else                                        %added by Joshua 
+            x=[];                                   %added by Joshua 
+        end                                         %added by Joshua 
+        if isfield(resultgurobi,'objval')           %added by Joshua 
         % because if no feasible solution is found, 'objval' will not be a field
-            f=resultgurobi.objval;                  %added by Joshua manually
-        else                                        %added by Joshua manually
-            f=[];                                   %added by Joshua manually
-        end                                         %added by Joshua manually
+            f=resultgurobi.objval;                  %added by Joshua 
+        else                                        %added by Joshua 
+            f=[];                                   %added by Joshua 
+        end                                         %added by Joshua 
         if strcmp(resultgurobi.status,'OPTIMAL')
            solStat = 1; % Optimal solution found
-           %[x,f] = deal(resultgurobi.x,resultgurobi.objval);   %commented by Joshua manually
+           %[x,f] = deal(resultgurobi.x,resultgurobi.objval);   %commented by Joshua 
         elseif strcmp(resultgurobi.status,'INFEASIBLE')
            solStat = 0; % Infeasible
         elseif strcmp(resultgurobi.status,'UNBOUNDED')
@@ -421,6 +428,64 @@ switch solver
         else
             solStat = 3; % Other problem, but integer solution exists
         end
+    case 'cplex_direct2'
+        %% cplexmilp.p direct
+        %Make use of IBM ILOG CPLEX provided matlab function 'cplexmilp.p'
+        %directly
+        %See cplexmilp.m for more refined control of cplex
+        %Siu Hung Joshua Chan 05/10/2014
+        
+        MILPproblemCplex=struct();
+        csL = csense == 'L';
+        csG = csense=='G';
+        csE = csense=='E';
+        MILPproblemCplex.f = c * sign(osense);
+        MILPproblemCplex.Aineq = [ A(csL,:); - A(csG,:)];
+        MILPproblemCplex.bineq = [ b(csL); - b(csG)];
+        MILPproblemCplex.Aeq = A(csE,:);
+        MILPproblemCplex.beq = b(csE);
+        MILPproblemCplex.lb = lb;
+        MILPproblemCplex.ub = ub;
+        MILPproblemCplex.ctype = vartype(:)';
+        if ~isempty(x0)
+            MILPproblemCplex.x0 = x0;
+        end
+        if isfield(MILPproblem,'sos')
+            MILPproblemCplex.sos = MILPproblem.sos;
+        end
+        %parameters
+        cplexoptions = cplexoptimset('cplex');
+        if solverParams.printLevel~=0
+            cplexoptions.diagnostics='on';
+        end
+        cplexoptions.timelimit = solverParams.timeLimit;
+        cplexoptions.mip.tolerances.integrality = solverParams.intTol;
+        cplexoptions.mip.tolerances.mipgap = solverParams.relMipGapTol;
+        cplexoptions.mip.tolerances.absmipgap = solverParams.absMipGapTol;
+        cplexoptions.simplex.tolerances.feasibility = solverParams.feasTol;
+        cplexoptions.simplex.tolerances.optimality = solverParams.optTol;
+        cplexoptions.emphasis.numerical = solverParams.NUMERICALEMPHASIS;   
+        if ~strcmp(parameters,'')
+            cplexparam = setdiff(fieldnames(parameters), optParamNames);
+            for j=1:numel(cplexparam)
+                cplexoptions = setfield(cplexoptions, cplexparam{j}, ...
+                    getfield(parameters, cplexparam{j}));
+            end
+        end
+        MILPproblemCplex.options = cplexoptions;
+        %solution
+        [x,f,~,output] = cplexmilp(MILPproblemCplex);
+        f = f * sign(osense);
+        if output.cplexstatus==101 || output.cplexstatus==102
+            solStat=1;
+        elseif output.cplexstatus==118
+            solStat=2;
+        elseif output.cplexstatus==119 || output.cplexstatus==103
+            solStat=0;
+        else
+            solStat=3;
+        end
+        stat = output.cplexstatus;        
     case 'mps'
         %% BuildMPS
         % This calls buildMPS and generates a MPS format description of the
@@ -479,6 +544,11 @@ if ~strcmp(solver,'mps')
     solution.origStat = stat;
     solution.time = t;
     solution.full = x;
+    if exist('xB','var')    %added by Joshua, to retreive MILP gap
+        solution.bound=xB;  %added by Joshua, to retreive MILP gap
+    else
+        solution.bound=NaN;
+    end                     %added by Joshua, to retreive MILP gap
     if(isfield(MILPproblem, 'intSolInd'))
         solution.intInd = MILPproblem.intSolInd;
     end

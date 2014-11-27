@@ -1,6 +1,6 @@
 function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
                                             options,param)
-%[EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(CbModel,flux,options,param)
+%[EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,options,param)
 %Given the stoichiometrix matrix, a flux distribution can be decomposed
 %into a set of EFM by this function.
 %
