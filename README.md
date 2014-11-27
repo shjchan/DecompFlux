@@ -1,7 +1,7 @@
 ﻿DecompFlux
 ==========
 
-The m-files are for decomposing flux distributions into sets of elementary flux modes (EFMs) without finding the EFM matrix in prior. 'decompflux.m' is the main function. The principle of the algorithm has been described in Chan and Ji (2011).
+The m-files are for decomposing flux distributions into sets of elementary flux modes (EFMs) without finding the EFM matrix in prior. 'DecompFlux.m' is the main function. The principle of the algorithm has been described in Chan and Ji (2011).
 
 Contents:
 A.	Functions
