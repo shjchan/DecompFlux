@@ -1,4 +1,4 @@
-function solution = solveCobraMILP(MILPproblem,varargin)
+function solution = solveCobraMILPedit(MILPproblem,varargin)
 %solveCobraMILP Solve constraint-based MILP problems
 %
 % solution = solveCobraMILP(MILPproblem,parameters)
