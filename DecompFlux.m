@@ -14,7 +14,7 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
 %
 %Optional input:
 %options is structure with the following optional fields:
-%  obj (default to use CbModel.obj if not provided): 
+%  c (default to use CbModel.c if not provided): 
 %    n by 1 objective coefficient vector
 %    +ve entries for maximization
 %    -ve entries for minimization (same as COBRA model)
@@ -97,9 +97,9 @@ else
 end
 FD.flux = flux;
 if isfield(CbModel,'rxns'), FD.rxns = CbModel.rxns; end
-if isfield(options,'obj'),   
-    FD.obj = -options.obj;
-elseif isfield(CbModel,'obj'),   
+if isfield(options,'c'),   
+    FD.obj = -options.c;
+elseif isfield(CbModel,'c'),   
     FD.obj = -CbModel.c;
 else
     FD.obj = ones(size(CbModel.S,2),1);
@@ -124,7 +124,7 @@ if ~isfield(options,'solver') || ~solverGood
     else
         error('A supported solver (Cplex or Cobra solver) cannot be identified.')
     end
-    if ~SM
+    if SM ~= 0
         disp(['Solver changed to: ' solver])
     end
 end
