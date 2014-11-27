@@ -1,41 +1,42 @@
-function [EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(CbModel,flux,...
+function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
                                             options,param)
-%[EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(FD,CT,SM,solver,param)
+%[EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(CbModel,flux,options,param)
 %Given the stoichiometrix matrix, a flux distribution can be decomposed
 %into a set of EFM by this function.
 %
 %Input:
-%CbModel is a structure with the following fields:
+%CbModel is a structure at least with the following fields:
 %   S:    m by n stoichiometric matrix 
 %   rev:  binary vector indicating reversibility in Sre, 
-%         1 for reversible and 0 for irreversible
+%         1 for reversible and 0 for irreversible 
+%         (assume all irreversible if not provided)
 %flux:  n by 1 flux distribution vector
 %
 %Optional input:
 %options is structure with the following optional fields:
-%obj (default to use CbModel.obj if not provided): 
-%   n by 1 objective coefficient vector
-%   +ve entries for maximization
-%   -ve entries for minimization (same as COBRA model)
-%CT: the type of constraints you want to use, input either '1' or '2' (as
-%   number) for two different types of constraints in the subproblem DC:
-%   1:  p_j<=M(v_j)(a_j) where M is a big number v_j is the flux value of 
-%       the vector 'flux'
-%   2:  p_j<=M(delta_j)(a_j) where M is a big number and delta_j is 0 
+%  obj (default to use CbModel.obj if not provided): 
+%    n by 1 objective coefficient vector
+%    +ve entries for maximization
+%    -ve entries for minimization (same as COBRA model)
+%  CT: the type of constraints you want to use, input either '1' or '2' (as
+%    number) for two different types of constraints in the subproblem DC:
+%    1:  p_j<=M(v_j)(a_j) where M is a big number v_j is the flux value of 
+%        the vector 'flux'
+%    2:  p_j<=M(delta_j)(a_j) where M is a big number and delta_j is 0 
 %       if v_j in 'flux' is zero, otherwise 1.
-%   It is the first type if you omit the input.
-%SM: level of display
-%    0: (no display)
-%    1: display when an EFM is found (default)
-%    2: display at every node
-%    3: show further the detail of each solve
-%solver: currently supported solver: 'cobra' or 'cplex', default 'cobra'.
-%block (default to be empty): 
-%       If you have k flux modes to be excluded from the possible solutions,
-%       then you have a n by k matrix in which each column has 1 for reactions 
-%       with non-zero fluxes in the flux mode and 0 for other entries.
-% eg. in a network with three reactions only,
-%     if block =
+%    It is the first type if you omit the input.
+%  SM: level of display
+%     0: (no display)
+%     1: display when an EFM is found (default)
+%     2: display at every node
+%     3: show further the detail of each solve
+%  solver: currently supported solver: 'cobra' or 'cplex', default 'cobra'.
+%  block (default to be empty): 
+%        If you have k flux modes to be excluded from the possible solutions,
+%        then you have a n by k matrix in which each column has 1 for reactions 
+%        with non-zero fluxes in the flux mode and 0 for other entries.
+%  eg. in a network with three reactions only,
+%      if block =
 %           [1 0;...
 %            1 1;...
 %            0 1];  
@@ -43,22 +44,22 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(CbModel,flux,...
 %     flux mode with non-zero fluxes in reaction 2 and 3, are being blocked
 %     from being the solution of the optimization problem.
 %
-%**The following three fields are not recommended to change for good
-%solutions, but depending on your flux distribution, they may need to be
-%changed.
-%lb (optional, default 0 for all reactions if not exist):   
-%       n by 1 lower bound vector (default zeros if empty)
-%ub (optional, default 1000 for all reactions if not exist):   
-%       n by 1 upper bound vector for scaling purpose. 
-%       It is recommended to use values around 1000 
-%       because otherwise Cplex is likely to have tolerance problems and 
+%  **The following three fields are not recommended to change for good
+%    solutions, but depending on your flux distribution, they may need to be
+%    changed.
+%  lb (default 0 for irreversible and -1000 for reversible reactions):   
+%        n by 1 lower bound vector (default zeros if empty)
+%  ub (default 1000 for all reactions):   
+%        n by 1 upper bound vector for scaling purpose. 
+%        It is recommended to use values around 1000 
+%        because otherwise Cplex is likely to have tolerance problems and 
 %       solution may not be accurate.
-%big (optional, default 10^8 for CT=1 and 10^7 for CT=2 if not exist):   
-%       the large number M used in the subproblem.
-%       Not recommended to be too high due to tolerance of the integer solver 
-%       of Cplex. Also being too low will over-constrain the set of 
-%       possible EFMs. 10^7 for CT=2 should be quite universally applicable
-%       but for CT=1, because it uses the information of the flux values in
+%  big (default 10^8 for CT=1 and 10^7 for CT=2):   
+%        the large number M used in the subproblem.
+%        Not recommended to be too high due to tolerance of the integer solver 
+%        of Cplex. Also being too low will over-constrain the set of 
+%        possible EFMs. 10^7 for CT=2 should be quite universally applicable
+%        but for CT=1, because it uses the information of the flux values in
 %       the flux distribution,0 it may depend on your flux distribution. 
 %       In general, the more different in the order of magnitude between 
 %       the maximum flux and the minimum flux in the flux distribution,  
@@ -67,7 +68,7 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(CbModel,flux,...
 %You may use this template:
 %options = struct('obj',obj,'CT',1);
 %
-%param: optimization parameter, for 'cobra' only
+%param: optimization parameter for SolveCobraMILP.m, for 'cobra' only
 %
 %Output:
 %EFM: the set of EFM
@@ -83,6 +84,8 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = decompflux(CbModel,flux,...
 %       will be recorded in this N by 2 matrix 'depth'.
 
 %% Pre-process
+%Add the path for subroutines
+addpath([pwd filesep 'DecompFluxSub']);
 %Check inputs
 if ~exist('options','var'), options = struct(); end
 FD = struct();
