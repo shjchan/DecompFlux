@@ -1,4 +1,4 @@
-DecompFlux
+﻿DecompFlux
 ==========
 
 The m-files are for decomposing flux distributions into sets of elementary flux modes (EFMs) without finding the EFM matrix in prior. 'decompflux.m' is the main function. The principle of the algorithm has been described in Chan and Ji (2011).
@@ -9,6 +9,7 @@ B.	Optimization solver
 C.	Technical problems
 D.	Example
 E.	Reference
+F.	Version history
 
 A. Functions
 1.	'decompflux.m' is the main function file. All other functions are invoked by it. Given the stoichiometrix matrix, a flux distribution can be decomposed into a set of EFM by this function. Parameters have been default if not supplied by user.
@@ -62,6 +63,16 @@ THE BIGG DATABASE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE UNIVERSITY OF 
 E. Reference
 Chan,S.H.J. and Ji,P. (2011) Decomposing flux distributions into elementary flux modes in genome-scale metabolic networks. Bioinformatics, 27(16), 2256-2262.
 Feist,A.M. et al. (2007) A genome-scale metabolic reconstruction for Escherichia coli K-12 MG1655 that accounts for 1260 ORFs and thermodynamic information. Mol. Syst. Biol., 3, 121.
+
+F. Version History
+Version 3, updated on 2014 Nov 27
+-changed function inputs to allow easier use for COBRA user (just input the COBRA model and the flux distribution will do the job).
+-changed subroutine's name in a way easier to be understood.
+Version 2, updated on 2014 Mar 20
+-added support for COBRA user
+Version 1, updated on 2012 Jun 29
+-First publish in GitHub
+
 
 Please cite the paper if you has used the algorithm in your publication.
 I earnestly hope it can help you. Please feel free to contact me if you have any question.
