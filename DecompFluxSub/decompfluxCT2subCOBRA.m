@@ -94,9 +94,9 @@ MILPproblem.csense=char(ones(1,numel(MILPproblem.b))*'L'); %sense of constraints
 MILPproblem.vartype=char([ones(1,Nr)*'B' ones(1,Nr)*'C']); %types of variables
 MILPproblem.x0=[]; %initial solution
 if exist('param','var')
-     info= solveCobraMILPedit(MILPproblem,param);
+     info= solveCobraMILP(MILPproblem,param);
 else
-     info= solveCobraMILPedit(MILPproblem);
+     info= solveCobraMILP(MILPproblem);
 end
 if SM >= 3
     disp(info.origStat);
@@ -128,7 +128,7 @@ else
             end
             if imb>epsB
                 Cor=p2;
-                [p2] = fluxcorrect(ST,p2,lb0,flux);
+                [p2] = fluxcorrect(ST,p2,lb0,flux,'cobra');
                 Cor=[Cor p2];
             end
             Rz=~nz&(fm>eps8);
@@ -177,7 +177,7 @@ else
                     end
                     if imb>epsB
                         Cor=p2;
-                        [p2] = fluxcorrect(ST,p2,lb0,flux);
+                        [p2] = fluxcorrect(ST,p2,lb0,flux,'cobra');
                         Cor=[Cor p2];
                     end
                     Rz=~nz&(fm>eps8);

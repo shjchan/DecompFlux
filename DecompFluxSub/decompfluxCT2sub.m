@@ -118,7 +118,7 @@ else
             end
             if imb>epsB
                 Cor=p2;
-                [p2] = fluxcorrect(ST,p2,lb0,flux);
+                [p2] = fluxcorrect(ST,p2,lb0,flux,'cplex');
                 Cor=[Cor p2];
             end
             Rz=~nz&(fm>eps8);
@@ -167,7 +167,7 @@ else
                     end
                     if imb>epsB
                         Cor=p2;
-                        [p2] = fluxcorrect(ST,p2,lb0,flux);
+                        [p2] = fluxcorrect(ST,p2,lb0,flux,'cplex');
                         Cor=[Cor p2];
                     end
                     Rz=~nz&(fm>eps8);

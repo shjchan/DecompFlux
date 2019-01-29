@@ -1,6 +1,6 @@
-function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
+function [EFM,FM,Rshut,Reduce,Corr,depth] = decompFlux(CbModel,flux,...
                                             options,param)
-%[EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,options,param)
+%[EFM,FM,Rshut,Reduce,Corr,depth] = decompFlux(CbModel,flux,options,param)
 %Given the stoichiometrix matrix, a flux distribution can be decomposed
 %into a set of EFM by this function.
 %
@@ -86,8 +86,8 @@ function [EFM,FM,Rshut,Reduce,Corr,depth] = DecompFlux(CbModel,flux,...
 %% Pre-process
 %Try to add the path for subroutines if not added
 if  ~exist('decompfluxCT1','file')
-    DFpath = which('DecompFlux');
-    strpos = strfind(DFpath, 'DecompFlux.m');
+    DFpath = which('decompFlux');
+    strpos = strfind(DFpath, 'decompFlux.m');
     id = 'MATLAB:dispatcher:pathWarning';
     warning('off',id) %turn off the warning in case that the path is not found
     addpath([DFpath(1:strpos-1) 'DecompFluxSub'])
